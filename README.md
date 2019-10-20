@@ -1,4 +1,4 @@
-#CMPUT291 Group Project 1
+# CMPUT291 Group Project 1
 
 ## Members
 	*yuqian5
