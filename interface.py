@@ -4,7 +4,7 @@ import sqlite3
 
 # print out a list of all commands and a short description for each
 def help():
-    info = ("Possible Command:",
+    info = ("Possible Commands:",
             "   - regBirth          register a birth",
             "           arguments: fname, lname, gender, bdate, bplace, fnameMother, lnameMother, fnameFather, lnameFather",
             " ",
@@ -27,7 +27,9 @@ def help():
             " ",
             "   - findOwner         find a car's owner",
             " ",
-            "   - quit              quit the program")
+            "   - quit              quit the program",
+            " ",
+            "Example Usage: regBirth Kylo Ren male 2019/01/24 edmonton Princess Leia Han Solo")
     for i in info:
         print(i)
 
