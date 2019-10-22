@@ -1,6 +1,7 @@
 import sqlite3
 from os import system as sys
 from time import sleep
+from getpass import getpass
 
 errorMsg = "username or password is invalid, please try again"
 
@@ -8,9 +9,9 @@ def verification(connection):
     while True:
         sys("clear")  # clear screen
         print("Welcome, please enter your credentials to login")
-        print("if you wish to quit the program, press [return] 2 times")
+        print("If you wish to quit the program, press [return] 2 times")
         username = input("Username: ")  # ask for username
-        password = input("Password: ")  # ask for password
+        password = getpass()  # ask for password
 
         # check if user wants to exit
         if len(username) == 0:
@@ -26,7 +27,7 @@ def verification(connection):
         crsr = connection.cursor()
 
         # fetch user's password for verification
-        retData = crsr.execute("""SELECT pwd FROM users WHERE uid = ?""", (username,)).fetchall()
+        retData = crsr.execute("""SELECT * FROM users WHERE uid = ? COLLATE NOCASE""", (username,)).fetchall()
 
         # check if retData is empty, if so, display failed message for 2sec, then restart
         if not retData:
@@ -35,9 +36,10 @@ def verification(connection):
             continue
 
         # verify password
-        if password == retData[0][0]:
+        if password == retData[0][1]:
             print("Verification Complete")
-            return True, username
+            sleep(1)
+            return True, retData[0][0], retData[0][2], retData[0][5]
         else:
             print(errorMsg)
             sleep(2)
