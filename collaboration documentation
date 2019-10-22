@@ -1,0 +1,27 @@
+Role Assignment:
+
+    yuqian5:
+        Login.py
+        main.py
+        interface.py: help()
+        interface.py: class Interface __init__
+        interface.py: class Interface start()
+        interface.py: class Interface renewVReg
+        interface.py: class Interface procSale
+        interface.py: class Interface getAbstract
+
+
+    baijin:
+        interface.py: class Interface regBirth
+        interface.py: class Interface regMar
+        interface.py: class Interface procPay
+
+
+    nhvu:
+        interface.py: class Interface findOwner
+        interface.py: class Interface createTicket
+
+
+
+
+
