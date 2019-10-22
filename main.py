@@ -1,8 +1,9 @@
 import sqlite3
-import login
-from interface import Interface
 from os import system as sys
 from time import sleep
+
+import login
+from interface import Interface
 
 
 def main():

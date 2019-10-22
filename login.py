@@ -1,9 +1,9 @@
-import sqlite3
+from getpass import getpass
 from os import system as sys
 from time import sleep
-from getpass import getpass
 
 errorMsg = "username or password is invalid, please try again"
+
 
 def verification(connection):
     while True:
@@ -44,5 +44,3 @@ def verification(connection):
             print(errorMsg)
             sleep(2)
             continue
-
-

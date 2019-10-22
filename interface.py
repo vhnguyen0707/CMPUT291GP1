@@ -1,6 +1,5 @@
 import datetime
 import sqlite3
-from os import system as sys
 
 
 # print out a list of all commands and a short description for each
@@ -35,9 +34,9 @@ def help():
 
 class Interface:
     def __init__(self, connection, username, role, city):
-        self.crsr = connection.cursor() # create cursor
+        self.crsr = connection.cursor()  # create cursor
 
-        #user information
+        # user information
         self.username = username
         self.role = role
         self.city = city
