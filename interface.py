@@ -1,5 +1,8 @@
 import datetime
+import re
 import sqlite3
+
+
 
 
 # print out a list of all commands and a short description for each
@@ -147,102 +150,167 @@ class Interface:
 
         # TODO perform operation
 
+    def generateTicket(self):
+        #   generate ticket by incrementing the highest current ticket ID
+        query = "select  max(tno) from tickets"
+        self.crsr.execute(query)
+        tickets = self.crsr.fetchall()
+        if len(tickets) == 0:
+            return '0'
+        return str(tickets[0][0]+1)
+
     def createTicket(self, info):
         if self.role != "o":
             print("you do not have the privilege to perform this operation")
             return False
-
         # TODO perform operation
+        while (True):
+            regno =  input("Please enter registration number: ")
+            if regno != '':
+                self.crsr.execute('''SELECT r.fname||' '|| r.lname, v.make, v.model, v.year, v.color
+                FROM  registrations AS r, vehicles AS v 
+                WHERE  r.regno = ? AND r.vin = v.vin;''', (regno,))
+                regnoExists = self.crsr.fetchone()
+                if regnoExists:
+                    print(regnoExists[0])
+                    prompt = input("Proceed to issue ticket? (Y/N): ").upper()
+                    if prompt == 'N':
+                        return False
+
+                    elif prompt == 'Y':
+                        # get ticket
+
+                        ticket = self.generateTicket()
+
+                        # get violation date
+                        # if is not provided set violation date to current date
+
+                        violationDate = input('Enter violation date (yyyy-mm-dd) or leave blank to get current date: ')
+                        if violationDate =='':
+                            violationDate = datetime.datetime.now().strftime("%Y-%m-%d")
+                            print(violationDate)
+                        while not datetime.datetime.strptime(violationDate, '%Y-%m-%d'):
+                            print("Invalid date")
+                            violationDate = input("Please re-enter violation date (yyyy-mm-dd): ")
+                        violationText = input("Enter description of violation: ")
+                        fineAmount = input("Enter fine amount: ")
+                        data = (ticket, regno, fineAmount, violationText, violationDate)
+                        self.crsr.execute("INSERT INTO tickets VALUES (?,?,?,?,?);", data)
+                        self.connection.commit()
+                        print("Successfully issued ticket\n")
+                else:
+                    print("Registration number does not exist\n")
+                    again = input("Try again?(Y/N): ").upper()
+                    if again == 'Y':
+                        self.createTicket(info)
+                    else:
+                        return False
+
 
     def findOwner(self, info):
         if self.role != "o":
             print("you do not have the privilege to perform this operation")
             return False
 
-                if self.role != "o":
-            print("you do not have the privilege to perform this operation")
-            return False
-
         # TODO perform operation
-        while True:
-            empty = 0
-            query = '''
-            SELECT v.make, v.model, v.year, v.color, r.plate, r.regdate, r.expiry, r.fname||' '||r.lname
-            FROM vehicles as v, (select vin, plate, regdate, expiry, fname, lname 
-                                from registrations r1 
-                                where regdate >= (select max(regdate) from registrations r2 where r2.vin = r1.vin)) as r 
-            WHERE v.vin = r.vin               
-                    '''
-            iMake = input("Enter car make, or leave blank to pass: ")
-            iModel = input("Enter car model, or leave blank to pass: ")
-            iYear = input("Enter car year, or leave blank to pass: ")
-            iColor = input("Enter car color, or leave blank to pass: ")
-            iPlate = input("Enter car plate, or leave blank to pass: ")
-            # incrementing the query if there is an input, otherwise, increment empty count.
-            if iMake !='':
-                query += " AND v.make ='{}'".format(iMake)
-            else:
-                empty += 1
-                print(empty)
-
-            if iModel != '':
-                query += " AND v.model = '{}'".format(iModel)
-            else:
-                empty += 1
-                print(empty)
-            
-
-            if iYear != '':
-                query  += " AND v.year = '{}'".format(iYear)
-            else:
-                empty += 1
-            
-
-            if iColor != '':
-                query += " AND v.color = '{}'".format(iColor)
-            else: 
-                empty += 1
-            
-
-            if iPlate != '':
-                query += " AND r.plate = '{}'".format(iPlate)
-            else:
-                empty += 1
-            
-			# prompt user to input again if there is no information provided
-            if empty == 0:
-                print("Please enter at least one field!")
-                continue
-            else:
-                break
-        query += ' COLLATE NOCASE ;'
-        self.crsr.execute(query)
-        info = self.crsr.fetchall()
-        if len(info) == 0:
-            print("No cars matched!")
-
-		# display all results and let user choose one car to see owner and info of registration
-        if len(info) > 4:
-            print("|   make   |  model  | year | color |  plate  |")
-            for car in info:
-                print("-"*63)
-                for col in range(5):
-                    print("| ", end = '')
-                    print(car[col], end ='')
-                    print(" ", end ='')
-                print("|")
-            print("-"*63)
-
-            flag = 1
-            while flag:
-                selection = input("Select a car from 1 - {} to see more information:".format(len(info)))
-                if re.match("^[1-{}]*$".format(len(info)), selection):
-                    # display owner of the chosen car
-                    self.displayOwner([info[selection-1]])
-                else:
-                    print("Invalid option!")
-                    flag = 0
+        
+        empty = 0
+        query = '''
+        SELECT v.make, v.model, v.year, v.color, r.plate, r.regdate, r.expiry, r.fname||' '||r.lname
+        FROM vehicles as v, (select vin, plate, regdate, expiry, fname, lname 
+                            from registrations r1 
+                            where regdate >= (select max(regdate) from registrations r2 where r2.vin = r1.vin)) as r 
+        WHERE v.vin = r.vin               
+                '''
+        iMake = input("Enter car make, or leave blank to pass: ")
+        iModel = input("Enter car model, or leave blank to pass: ")
+        iYear = input("Enter car year, or leave blank to pass: ")
+        iColor = input("Enter car color, or leave blank to pass: ")
+        iPlate = input("Enter car plate, or leave blank to pass: ")
+        # incrementing the query if there is an input, otherwise, increment empty count.
+        if iMake !='':
+            query += " AND v.make ='{}'".format(iMake)
         else:
-            # display all if there are less then 4 cars matching input of user
-            self.displayOwner(info)
+            empty += 1
+
+        if iModel != '':
+            query += " AND v.model = '{}'".format(iModel)
+        else:
+            empty += 1
+        
+
+        if iYear != '':
+            query  += " AND v.year = '{}'".format(iYear)
+        else:
+            empty += 1
+        
+
+        if iColor != '':
+            query += " AND v.color = '{}'".format(iColor)
+        else: 
+            empty += 1
+        
+
+        if iPlate != '':
+            query += " AND r.plate = '{}'".format(iPlate)
+        else:
+            empty += 1
+    
+        if empty != 5 :
+            query += ' COLLATE NOCASE ;'
+            self.crsr.execute(query)
+            info = self.crsr.fetchall()
+            if not info:
+                print("No cars found!")
+            else:
+# display all results and let user choose one car to see owner and info of registration
+                if len(info) > 4:
+                    print("|   make   |  model | year | color |  plate  |")
+                    for car in info:
+                        print("-"*63)
+                        for col in range(5):
+                            print("| ", end = '')
+                            print(car[col], end ='')
+                            print(" ", end ='')
+                        print("|")
+                    print("-"*63)
+        
+                    flag = 1
+                    while flag:
+                        selection = input("Select a car from 1 - {} to see more information:".format(len(info)))
+                        if re.match("^[1-{}]*$".format(len(info)), selection):
+                            # display owner of the chosen car
+                            self.displayOwner([info[selection-1]])
+                        else:
+                            print("Invalid option!")
+                            flag = 0
+                else:
+                    # display all if there are less then 4 cars matching input of user
+                    self.displayOwner(info)
+        else:
+            again = input("Try again?(Y/N): ").upper()
+            if again == 'Y':
+                self.findOwner(info)
+            else:
+                return False            
+
+    def displayOwner(self, data):
+        print("|   make   |  model | year | color |  plate  |registrationDate|   expiry   |       owner       |")
+        print("-"*100)
+        for car in data:
+            for col in range(8):
+                print("| ", end='')
+                print(car[col], end ='')
+                print("  ", end = '')
+            print("|")
+            print("-"*100)
+
+
+
+
+
+
+
+
+
 
