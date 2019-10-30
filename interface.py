@@ -159,5 +159,90 @@ class Interface:
             print("you do not have the privilege to perform this operation")
             return False
 
+                if self.role != "o":
+            print("you do not have the privilege to perform this operation")
+            return False
+
         # TODO perform operation
+        while True:
+            empty = 0
+            query = '''
+            SELECT v.make, v.model, v.year, v.color, r.plate, r.regdate, r.expiry, r.fname||' '||r.lname
+            FROM vehicles as v, (select vin, plate, regdate, expiry, fname, lname 
+                                from registrations r1 
+                                where regdate >= (select max(regdate) from registrations r2 where r2.vin = r1.vin)) as r 
+            WHERE v.vin = r.vin               
+                    '''
+            iMake = input("Enter car make, or leave blank to pass: ")
+            iModel = input("Enter car model, or leave blank to pass: ")
+            iYear = input("Enter car year, or leave blank to pass: ")
+            iColor = input("Enter car color, or leave blank to pass: ")
+            iPlate = input("Enter car plate, or leave blank to pass: ")
+            # incrementing the query if there is an input, otherwise, increment empty count.
+            if iMake !='':
+                query += " AND v.make ='{}'".format(iMake)
+            else:
+                empty += 1
+                print(empty)
+
+            if iModel != '':
+                query += " AND v.model = '{}'".format(iModel)
+            else:
+                empty += 1
+                print(empty)
+            
+
+            if iYear != '':
+                query  += " AND v.year = '{}'".format(iYear)
+            else:
+                empty += 1
+            
+
+            if iColor != '':
+                query += " AND v.color = '{}'".format(iColor)
+            else: 
+                empty += 1
+            
+
+            if iPlate != '':
+                query += " AND r.plate = '{}'".format(iPlate)
+            else:
+                empty += 1
+            
+			# prompt user to input again if there is no information provided
+            if empty == 0:
+                print("Please enter at least one field!")
+                continue
+            else:
+                break
+        query += ' COLLATE NOCASE ;'
+        self.crsr.execute(query)
+        info = self.crsr.fetchall()
+        if len(info) == 0:
+            print("No cars matched!")
+
+		# display all results and let user choose one car to see owner and info of registration
+        if len(info) > 4:
+            print("|   make   |  model  | year | color |  plate  |")
+            for car in info:
+                print("-"*63)
+                for col in range(5):
+                    print("| ", end = '')
+                    print(car[col], end ='')
+                    print(" ", end ='')
+                print("|")
+            print("-"*63)
+
+            flag = 1
+            while flag:
+                selection = input("Select a car from 1 - {} to see more information:".format(len(info)))
+                if re.match("^[1-{}]*$".format(len(info)), selection):
+                    # display owner of the chosen car
+                    self.displayOwner([info[selection-1]])
+                else:
+                    print("Invalid option!")
+                    flag = 0
+        else:
+            # display all if there are less then 4 cars matching input of user
+            self.displayOwner(info)
 
