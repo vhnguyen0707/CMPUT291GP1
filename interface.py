@@ -221,12 +221,13 @@ class Interface:
         
         empty = 0
         query = '''
-        SELECT v.make, v.model, v.year, v.color, r.plate, r.regdate, r.expiry, r.fname||' '||r.lname
-        FROM vehicles as v, (select vin, plate, regdate, expiry, fname, lname 
+        SELECT make, model, year, color, plate, regdate, expiry, fname||' '||lname
+        FROM vehicles LEFT OUTER JOIN (select vin, plate, regdate, expiry, fname, lname 
                             from registrations r1 
-                            where regdate >= (select max(regdate) from registrations r2 where r2.vin = r1.vin)) as r 
-        WHERE v.vin = r.vin               
+                            where regdate >= (select max(regdate) from registrations r2 where r2.vin = r1.vin)) using (vin)
+        WHERE '1' = '1'              
                 '''
+        # set first condition that is always true to concatenate AND condition
         iMake = input("Enter car make, or leave blank to pass: ")
         iModel = input("Enter car model, or leave blank to pass: ")
         iYear = input("Enter car year, or leave blank to pass: ")
@@ -234,35 +235,35 @@ class Interface:
         iPlate = input("Enter car plate, or leave blank to pass: ")
         # incrementing the query if there is an input, otherwise, increment empty count.
         if iMake !='':
-            query += " AND v.make ='{}'".format(iMake)
+            query += " AND make = '{}' COLLATE NOCASE".format(iMake)
         else:
             empty += 1
 
         if iModel != '':
-            query += " AND v.model = '{}'".format(iModel)
+            query += " AND model = '{}' COLLATE NOCASE".format(iModel)
         else:
             empty += 1
         
 
         if iYear != '':
-            query  += " AND v.year = '{}'".format(iYear)
+            query  += " AND year = '{}' COLLATE NOCASE".format(iYear)
         else:
             empty += 1
         
 
         if iColor != '':
-            query += " AND v.color = '{}'".format(iColor)
+            query += " AND color = '{}' COLLATE NOCASE".format(iColor)
         else: 
             empty += 1
         
 
         if iPlate != '':
-            query += " AND r.plate = '{}'".format(iPlate)
+            query += " AND plate = '{}' COLLATE NOCASE".format(iPlate)
         else:
             empty += 1
     
         if empty != 5 :
-            query += ' COLLATE NOCASE ;'
+            query += ';'
             self.crsr.execute(query)
             info = self.crsr.fetchall()
             if not info:
@@ -270,7 +271,7 @@ class Interface:
             else:
 # display all results and let user choose one car to see owner and info of registration
                 if len(info) >= 4:
-                    print("|   make   |  model | year | color |  plate  |")
+                    print("   make   |  model | year | color |  plate  ")
                     for car in info:
                         print("-"*63)
                         for col in range(5):
@@ -280,15 +281,18 @@ class Interface:
                         print("|")
                     print("-"*63)
         
-                    flag = 1
-                    while flag:
-                        selection = input("Select a car from 1 - {} to see more information:".format(len(info)))
-                        if re.match("^[1-{}]*$".format(len(info)), selection):
+                    while True:
+                        selection = input("Select a car from 1 - {} to see more information: ".format(len(info))).strip('\n')
+                        if self.isInt(selection):
+                            selection = int(selection)
+                            if selection in range(1, len(info)):
                             # display owner of the chosen car
-                            self.displayOwner([info[selection-1]])
+                                self.displayOwner([info[selection-1]])
+                                break
+                            else:
+                                print("Invalid option!")
                         else:
                             print("Invalid option!")
-                            flag = 0
                 else:
                     # display all if there are less then 4 cars matching input of user
                     self.displayOwner(info)
@@ -300,15 +304,25 @@ class Interface:
                 return False            
 
     def displayOwner(self, data):
-        print("|   make   |  model | year | color |  plate  |registrationDate|   expiry   |       owner       |")
-        print("-"*100)
-        for car in data:
-            for col in range(8):
-                print("| ", end='')
-                print(car[col], end ='')
-                print("  ", end = '')
-            print("|")
+        if len(data) == 1 and data[0][5] == None:
+                print("This car has no owner.")
+        else:
+            print("|   make   |  model | year | color |  plate  |registrationDate|   expiry   |       owner       |")
             print("-"*100)
+            for car in data:
+                for col in range(8):
+                    print("| ", end='')
+                    print(car[col], end ='')
+                    print("  ", end = '')
+                print("|")
+                print("-"*100)
+                
+    def isInt(self, selection):
+        try:
+            selection = int(selection)
+            return True
+        except:
+            return False
 
 
 
