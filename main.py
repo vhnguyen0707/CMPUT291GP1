@@ -11,7 +11,7 @@ def main():
     # establish connection to database upon starting the program
     try:
         print("Connecting to Database...", end="")
-        connection = sqlite3.connect("testDB1.db")
+        connection = sqlite3.connect("testDB.db")
     except sqlite3.Error:
         print("unable to connect to database")
         exit(1)
