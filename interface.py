@@ -172,7 +172,12 @@ class Interface:
                 WHERE  r.regno = ? AND r.vin = v.vin;''', (regno,))
                 regnoExists = self.crsr.fetchone()
                 if regnoExists:
-                    print(regnoExists[0])
+                    print("     Owner     |     Make     |     Model     |     Year     |     Color    ")
+                    print("-"*75)
+                    for i in range(len(regnoExists)):
+                        print(regnoExists[i], end='')
+                        print(' '*7, end='')
+                    
                     prompt = input("Proceed to issue ticket? (Y/N): ").upper()
                     if prompt == 'N':
                         return False
@@ -264,7 +269,7 @@ class Interface:
                 print("No cars found!")
             else:
 # display all results and let user choose one car to see owner and info of registration
-                if len(info) > 4:
+                if len(info) >= 4:
                     print("|   make   |  model | year | color |  plate  |")
                     for car in info:
                         print("-"*63)
