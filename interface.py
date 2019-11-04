@@ -359,7 +359,7 @@ class Interface:
             print("you do not have the privilege to perform this operation")
             return False
 
-        tno = input("Pls enter ticket number: " )
+        tno = input("Please enter ticket number: " )
         tno_list = (tno,)
 
         # get the todays date
